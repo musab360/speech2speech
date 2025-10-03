@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign-nize Customer Support</title>
+    <link rel="icon" href="../static/sign-nize-logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <!-- <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-3d">
+                        <i class="fas fa-sign"></i>
+                    </div>
+                    <div class="brand-info">
+                        <h1>Sign-nize</h1>
+                        <p>Custom Sign Design & Production</p>
+                    </div>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span>24/7 Support</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-star"></i>
+                        <span>5-Star Service</span>
+                    </div>
+                </div>
+            </div>
+        </header> -->
+
+        <!-- Main Chat Interface -->
+        <div class="chat-container">
+            <div class="chat-window">
+                <div class="chat-header">
+                    <div class="chat-header-content">
+                        <div class="agent-info">
+                            <div class="signize-logo">
+                                <div class="logo-circle">
+                                    <span class="logo-text">SIGNIZE</span>
+                                    <div class="logo-accent"></div>
+                                </div>
+                            </div>
+                            <div class="agent-details">
+                                <h3>Signize</h3>
+                                <!-- <span class="status online">
+                                    <i class="fas fa-circle"></i>
+                                    Online
+                                </span> -->
+                            </div>
+                        </div>
+                        <div class="chat-controls">
+                            <button class="control-btn minimize-btn" id="minimizeBtn">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="control-btn close-btn" id="closeBtn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Welcome Message -->
+                    <div class="message ai-message">
+                        <div class="message-avatar">
+                            <img src="https://45733428.fs1.hubspotusercontent-na2.net/hub/45733428/hubfs/unnamed%20(2)%20(1).png?width=108&height=108" alt="AI Assistant" class="robot-avatar">
+                        </div>
+                        <div class="message-content">
+                            <div class="message-bubble">
+                                <p>Hello! How can I assist you today? I'm here to help you with your custom sign design needs. 🎨</p>
+                            </div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <!-- Email Field (hidden by default) -->
+                    <div class="email-field-container" id="emailFieldContainer" style="display: none;">
+                        <div class="email-input-wrapper">
+                            <input type="email" id="emailInput" placeholder="Enter your email address..." class="email-input">
+                            <button id="emailSubmitBtn" class="email-submit-btn">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                        <div class="email-validation" id="emailValidation"></div>
+                    </div>
+                    
+
+                    
+                    <!-- REMOVED: Logo upload section - not needed -->
+                    
+                    <div class="input-wrapper">
+                        <input type="text" id="messageInput" placeholder="Type your message here..." class="message-input">
+                        <button id="sendBtn" class="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="quick-action-btn" data-action="start-design">
+                            <i class="fas fa-palette"></i>
+                            Start Design
+                        </button>
+                        <button class="quick-action-btn" data-action="get-quote">
+                            <i class="fas fa-calculator"></i>
+                            Get Quote
+                        </button>
+                        <button class="quick-action-btn" data-action="view-portfolio">
+                            <i class="fas fa-images"></i>
+                            View Portfolio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <div class="fab-container">
+            <button class="fab" id="fabBtn">
+                <i class="fas fa-comments"></i>
+            </button>
+        </div>
+
+        <!-- Quote Form Modal -->
+        <div class="modal-overlay" id="quoteModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Get Your Quote & Mockup</h2>
+                    <button class="modal-close" id="closeQuoteModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="quoteForm">
+                        <!-- Logo Upload Section -->
+                        <div class="form-group">
+                            <label for="logoUploads">Logo Files (Optional)</label>
+                            <div class="logo-upload-container">
+                                <div class="logo-upload-area" id="logoUploadArea">
+                                    <div class="logo-upload-prompt">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <p>Click to upload logo files or drag and drop</p>
+                                        <p class="upload-hint">Supports: JPG, PNG, PDF, AI, EPS (Max 10MB each)</p>
+                                    </div>
+                                    <input type="file" id="logoFileInput" name="logos" multiple accept=".jpg,.jpeg,.png,.pdf,.ai,.eps" style="display: none;">
+                                </div>
+                                <div class="logo-preview-container" id="logoPreviewContainer" style="display: none;">
+                                    <h4>Uploaded Logos:</h4>
+                                    <div class="logo-preview-list" id="logoPreviewList"></div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="logoCount" name="logoCount" value="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sizeDimensions">Size & Dimensions (Optional)</label>
+                            <div class="dimensions-container">
+                                <div class="dimension-input">
+                                    <label for="width">Width</label>
+                                    <div class="input-with-unit">
+                                        <input type="number" id="width" name="width" placeholder="Enter width" step="0.01" min="0">
+                                        <div class="unit-buttons">
+                                            <button type="button" class="unit-btn active" data-unit="inches" data-field="width">Inches</button>
+                                            <button type="button" class="unit-btn" data-unit="feet" data-field="width">Feet</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dimension-input">
+                                    <label for="height">Height</label>
+                                    <div class="input-with-unit">
+                                        <input type="number" id="height" name="height" placeholder="Enter height" step="0.01" min="0">
+                                        <div class="unit-buttons">
+                                            <button type="button" class="unit-btn active" data-unit="inches" data-field="height">Inches</button>
+                                            <button type="button" class="unit-btn" data-unit="feet" data-field="height">Feet</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="sizeDimensions" name="sizeDimensions">
+                        </div>
+                        
+                                                 <div class="form-group">
+                             <label>Material Preference (Optional)</label>
+                             <div class="checkbox-group">
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="materialPreference" value="metal">
+                                     <span class="checkmark"></span>
+                                     Metal
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="materialPreference" value="acrylic">
+                                     <span class="checkmark"></span>
+                                     Acrylic
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="materialPreference" value="aluminum">
+                                     <span class="checkmark"></span>
+                                     Aluminum
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="materialPreference" value="wood">
+                                     <span class="checkmark"></span>
+                                     Wood
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="materialPreference" value="other">
+                                     <span class="checkmark"></span>
+                                     Other
+                                 </label>
+                             </div>
+                         </div>
+                         
+                         <div class="form-group">
+                             <label>Illumination (Optional)</label>
+                             <div class="checkbox-group">
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="illumination" value="no-lighting">
+                                     <span class="checkmark"></span>
+                                     No lighting
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="illumination" value="led-backlit">
+                                     <span class="checkmark"></span>
+                                     LED Backlit
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="illumination" value="front-lit">
+                                     <span class="checkmark"></span>
+                                     Front Lit
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="illumination" value="halo-lit">
+                                     <span class="checkmark"></span>
+                                     Halo Lit
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="illumination" value="channel-letters">
+                                     <span class="checkmark"></span>
+                                     Channel Letters
+                                 </label>
+                             </div>
+                         </div>
+                         
+                         <div class="form-group">
+                             <label>Installation Surface (Optional)</label>
+                             <div class="checkbox-group">
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="installationSurface" value="brick-wall">
+                                     <span class="checkmark"></span>
+                                     Brick Wall
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="installationSurface" value="concrete">
+                                     <span class="checkmark"></span>
+                                     Concrete
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="installationSurface" value="drywall">
+                                     <span class="checkmark"></span>
+                                     Drywall
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="installationSurface" value="metal-surface">
+                                     <span class="checkmark"></span>
+                                     Metal Surface
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="installationSurface" value="wood-surface">
+                                     <span class="checkmark"></span>
+                                     Wood Surface
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="installationSurface" value="other">
+                                     <span class="checkmark"></span>
+                                     Other
+                                 </label>
+                             </div>
+                         </div>
+                         
+                         <div class="form-group">
+                             <label for="cityState">City & State (Optional)</label>
+                             <input type="text" id="cityState" name="cityState" placeholder="e.g., New York, NY">
+                         </div>
+                         
+                         <div class="form-group">
+                             <label for="budget">Budget Range (Optional)</label>
+                             <div class="checkbox-group">
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="budget" value="under-500">
+                                     <span class="checkmark"></span>
+                                     Under $500
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="budget" value="500-1000">
+                                     <span class="checkmark"></span>
+                                     $500 - $1,000
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="budget" value="1000-2500">
+                                     <span class="checkmark"></span>
+                                     $1,000 - $2,500
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="budget" value="2500-5000">
+                                     <span class="checkmark"></span>
+                                     $2,500 - $5,000
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="budget" value="5000-10000">
+                                     <span class="checkmark"></span>
+                                     $5,000 - $10,000
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="budget" value="over-10000">
+                                     <span class="checkmark"></span>
+                                     Over $10,000
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="budget" value="flexible">
+                                     <span class="checkmark"></span>
+                                     Flexible
+                                 </label>
+                             </div>
+                         </div>
+                         
+                         <div class="form-group">
+                             <label>Placement (Optional)</label>
+                             <div class="checkbox-group">
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="placement" value="indoor">
+                                     <span class="checkmark"></span>
+                                     Indoor
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="placement" value="outdoor">
+                                     <span class="checkmark"></span>
+                                     Outdoor
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="placement" value="both">
+                                     <span class="checkmark"></span>
+                                     Both Indoor & Outdoor
+                                 </label>
+                             </div>
+                         </div>
+                         
+                         <div class="form-group">
+                             <label>Deadline (Optional)</label>
+                             <div class="checkbox-group">
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="deadline" value="standard">
+                                     <span class="checkmark"></span>
+                                     Standard (15-17 business days)
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="deadline" value="rush">
+                                     <span class="checkmark"></span>
+                                     Rush (12 business days - 20% additional cost)
+                                 </label>
+                                 <label class="checkbox-item">
+                                     <input type="checkbox" name="deadline" value="flexible">
+                                     <span class="checkmark"></span>
+                                     Flexible
+                                 </label>
+                             </div>
+                         </div>
+                         
+                         <div class="form-group">
+                             <label for="price">Price (Optional)</label>
+                             <div class="price-input-wrapper">
+                                 <span class="price-symbol">$</span>
+                                 <input type="number" id="price" name="price" placeholder="0.00" step="0.01" min="0">
+                             </div>
+                         </div>
+                        
+                        <div class="form-group">
+                            <label for="additionalNotes">Additional Notes (Optional)</label>
+                            <textarea id="additionalNotes" name="additionalNotes" placeholder="Any additional requirements or special requests..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" id="submitQuoteBtn">Submit Quote Request</button>
+                            <button type="button" class="btn-secondary" id="cancelQuote">Cancel</button>
+                            <button type="button" class="btn-tertiary" id="startFreshBtn">Start Fresh</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quote Summary Modal -->
+        <div class="modal-overlay" id="quoteSummaryModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Your Quote Summary</h2>
+                    <button class="modal-close" id="closeQuoteSummaryModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="quoteSummaryContent"></div>
+                    <div class="quote-actions">
+                        <button class="btn-primary" id="requestChanges">Request Changes</button>
+                        <button class="btn-secondary" id="closeSummary">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SVG Icons -->
+    <svg style="display: none;">
+        <defs>
+            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <script src="../static/script.js"></script>
+</body>
+</html>

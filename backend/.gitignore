@@ -1,0 +1,67 @@
+# Environment variables
+.env
+.env.*
+*.env
+env_*.txt
+env_working.txt
+
+# Google Service Account credentials
+credentials.json
+*credentials*
+*credential*
+
+# MongoDB connection strings and sensitive data (but allow mongodb_operations.py)
+# *mongodb*
+*connection*
+*uri*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Chat sessions - NOW TRACKING (commented out for tracking)
+# chat_sessions/
+
+# ChromaDB storage - NOW TRACKING (commented out for tracking)
+# chroma_persistent_storage/
+
+# Temporary files
+*.tmp
+*.temp
+*~
