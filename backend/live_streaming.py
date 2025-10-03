@@ -51,13 +51,13 @@ def handle_audio_chunk(data):
             input=ai_text,
             response_format="mp3"
         ) as resp:
-            resp.stream_to_file(audio_file.name)
+            resp.stream_to_file("audio/audio.mp3")
 
         # send the *whole mp3 file* back
-        with open(audio_file.name, "rb") as f:
+        with open("audio/audio.mp3", "rb") as f:
             audio_bytes = f.read()
             # socketio.emit("audio_response", f.read(), broadcast=False)
-        os.remove(audio_file.name)
+        os.remove("audio/audio.mp3")
 
     finally:
         os.remove(tmp_path)

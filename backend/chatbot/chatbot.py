@@ -101,7 +101,9 @@ except Exception as e:
     print(f"⚠️  Failed to initialize ChromaDB: {e}")
     chroma_collection = None
 
-def generate_sign_nize_response(client, user_message, session_data):
+def generate_sign_nize_response(client, user_message,
+                                #  session_data
+                                 ): ## removing session data argument
     """Generate response using the Sign-nize customer support system prompt with context awareness and RAG"""
 
     current_date = datetime.now().strftime('%B %d, %Y')
@@ -120,80 +122,81 @@ def generate_sign_nize_response(client, user_message, session_data):
         except Exception as e:
             print(f"⚠️  Error querying knowledge base: {e}")
 
-    conversation_context = ""
-    if session_data["messages"]:
-        conversation_context = "\n\nFULL CONVERSATION HISTORY:\n"
-        for msg in session_data["messages"]:
-            role = "User" if msg["role"] == "user" else "Assistant"
-            conversation_context += f"{role}: {msg['content']}\n"
+#     conversation_context = ""
+#     if session_data["messages"]:
+#         conversation_context = "\n\nFULL CONVERSATION HISTORY:\n"
+#         for msg in session_data["messages"]:
+#             role = "User" if msg["role"] == "user" else "Assistant"
+#             conversation_context += f"{role}: {msg['content']}\n"
 
-    email_already_collected = False
-    email_value = None
+#     email_already_collected = False
+#     email_value = None
 
-    if session_data.get("email"):
-        email_already_collected = True
-        email_value = session_data.get("email")
-    elif session_data.get("customer_info", {}).get("email"):
-        email_already_collected = True
-        email_value = session_data.get("customer_info", {}).get("email")
+#     if session_data.get("email"):
+#         email_already_collected = True
+#         email_value = session_data.get("email")
+#     elif session_data.get("customer_info", {}).get("email"):
+#         email_already_collected = True
+#         email_value = session_data.get("customer_info", {}).get("email")
 
-    if not email_already_collected and session_data["messages"]:
-        for msg in session_data["messages"]:
-            if msg["role"] == "user" and "@" in msg["content"]:
-                # Extract email from the message
-                import re
-                email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', msg["content"])
-                if email_match:
-                    email_already_collected = True
-                    email_value = email_match.group(0)
+#     if not email_already_collected and session_data["messages"]:
+#         for msg in session_data["messages"]:
+#             if msg["role"] == "user" and "@" in msg["content"]:
+#                 # Extract email from the message
+#                 import re
+#                 email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', msg["content"])
+#                 if email_match:
+#                     email_already_collected = True
+#                     email_value = email_match.group(0)
 
-                    session_data["email"] = email_value
-                    break
+#                     session_data["email"] = email_value
+#                     break
 
-    email_context = ""
-    if email_value:
-        email_context = f"""
-CURRENT SESSION EMAIL: {email_value}
-- This email has already been collected and verified
-- Do NOT ask for email again in this session
-- Use this email for all quote requests and order tracking
-- If customer says "bye" and then starts talking again, they still have the same email
-"""
-        print(f"📧 Email context injected: {email_value}")
-    else:
-        email_context = """
-CURRENT SESSION EMAIL: NOT COLLECTED
-- This is a new conversation or email not yet provided
-- Follow the email collection process for first message
-"""
-        print("📧 Email context: NOT COLLECTED")
+#     email_context = ""
+#     if email_value:
+#         email_context = f"""
+# CURRENT SESSION EMAIL: {email_value}
+# - This email has already been collected and verified
+# - Do NOT ask for email again in this session
+# - Use this email for all quote requests and order tracking
+# - If customer says "bye" and then starts talking again, they still have the same email
+# """
+#         print(f"📧 Email context injected: {email_value}")
+#     else:
+#         email_context = """
+# CURRENT SESSION EMAIL: NOT COLLECTED
+# - This is a new conversation or email not yet provided
+# - Follow the email collection process for first message
+# """
+#         print("📧 Email context: NOT COLLECTED")
 
-    print(f"🔍 Email already collected: {email_already_collected}")
-    print(f"📧 Email value: {email_value}")
+#     print(f"🔍 Email already collected: {email_already_collected}")
+#     print(f"📧 Email value: {email_value}")
 
-    context_instructions = f"""
+#     context_instructions = f"""
 
-CONTEXT INSTRUCTIONS:
-1. CAREFULLY READ the full conversation history above.
-2. If this is the customer's FIRST message in the conversation, ALWAYS ask for email first.
-3. If email is already collected, NEVER ask for it again - this is a CRITICAL rule.
-4. After email collection, ask "How can I help you with your sign needs today?"
-5. Handle order issues by collecting Order ID and phone number, then tell customer representative will contact them.
-6. For general sign questions after order issues, provide helpful information without asking "How can I help you" again.
-7. CRITICAL: Trigger quote form with [QUOTE_FORM_TRIGGER] when customer says ANYTHING about wanting mockup, quote, pricing, or estimate - this is a TOP PRIORITY.
-8. CRITICAL: Even if customer says "Hi" again after email collection, do NOT ask for email - just say "Hello! How can I help you with your sign needs today?"
-9. CRITICAL: When customer wants to update/modify their quote, ALWAYS trigger the form with [QUOTE_FORM_TRIGGER].
-10. CRITICAL: For irrelevant questions (weather, politics, etc.), redirect to signage topics professionally.
-11. CRITICAL: For goodbye messages, give warm Signize farewell.
-12. CRITICAL: Questions about signs, materials, installation, pricing, etc. are ALWAYS relevant - answer them helpfully.
-13. CRITICAL: When customers ask about specific sign types (2D, 3D, metal, acrylic, etc.), provide detailed information about those types - NEVER give generic greetings.
-14. CRITICAL: Use the knowledge base to provide comprehensive answers about sign types, materials, and applications.
-15. CRITICAL: The email {email_value if email_value else 'has not been collected yet'} - use this information to determine if email collection is needed.
-16. CRITICAL: Email persists throughout the session - if customer says "bye" and then talks again, they still have the same email.
-17. CRITICAL: Only ask for email if this is a completely new session or if email was never collected.
-"""
+# CONTEXT INSTRUCTIONS:
+# 1. CAREFULLY READ the full conversation history above.
+# 2. If this is the customer's FIRST message in the conversation, ALWAYS ask for email first.
+# 3. If email is already collected, NEVER ask for it again - this is a CRITICAL rule.
+# 4. After email collection, ask "How can I help you with your sign needs today?"
+# 5. Handle order issues by collecting Order ID and phone number, then tell customer representative will contact them.
+# 6. For general sign questions after order issues, provide helpful information without asking "How can I help you" again.
+# 7. CRITICAL: Trigger quote form with [QUOTE_FORM_TRIGGER] when customer says ANYTHING about wanting mockup, quote, pricing, or estimate - this is a TOP PRIORITY.
+# 8. CRITICAL: Even if customer says "Hi" again after email collection, do NOT ask for email - just say "Hello! How can I help you with your sign needs today?"
+# 9. CRITICAL: When customer wants to update/modify their quote, ALWAYS trigger the form with [QUOTE_FORM_TRIGGER].
+# 10. CRITICAL: For irrelevant questions (weather, politics, etc.), redirect to signage topics professionally.
+# 11. CRITICAL: For goodbye messages, give warm Signize farewell.
+# 12. CRITICAL: Questions about signs, materials, installation, pricing, etc. are ALWAYS relevant - answer them helpfully.
+# 13. CRITICAL: When customers ask about specific sign types (2D, 3D, metal, acrylic, etc.), provide detailed information about those types - NEVER give generic greetings.
+# 14. CRITICAL: Use the knowledge base to provide comprehensive answers about sign types, materials, and applications.
+# 15. CRITICAL: The email {email_value if email_value else 'has not been collected yet'} - use this information to determine if email collection is needed.
+# 16. CRITICAL: Email persists throughout the session - if customer says "bye" and then talks again, they still have the same email.
+# 17. CRITICAL: Only ask for email if this is a completely new session or if email was never collected.
+# """
 
-    full_prompt = system_prompt + email_context + context_instructions + knowledge_context + conversation_context + f"\n\nCurrent User Message: {user_message}"
+    full_prompt = system_prompt + f"\n\nCurrent User Message: {user_message}"
+    # + email_context + context_instructions + knowledge_context + conversation_context +
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
