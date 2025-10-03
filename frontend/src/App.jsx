@@ -115,68 +115,260 @@
 
 
 
-import { io } from "socket.io-client";
 import React, { useRef, useState } from "react";
+import axios from "axios";
+import { PiWaveformBold } from "react-icons/pi";
+import { FaPhoneSlash } from "react-icons/fa6";
 
 function App() {
   const [recording, setRecording] = useState(false);
-  const [responses, setResponses] = useState([]); // store all AI responses
-  const socketRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
+  const [responses, setResponses] = useState([]);   // [{ url, text }]
+  const [transcripts, setTranscripts] = useState([]);
+  const [ttsText, setTtsText] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const startStreaming = async () => {
-    socketRef.current = io("http://127.0.0.1:5000");
+  const recognitionRef = useRef(null);
+  const audioRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const sourceRef = useRef(null);
+  const animationRef = useRef(null);
 
-    socketRef.current.on("connect", () => {
-      console.log("✅ Connected to backend");
-    });
+  // 🎵 Setup analyser on backend <audio>
+  const setupBars = async () => {
+    if (!audioRef.current) return;
 
-    socketRef.current.on("audio_response", (data) => {
-      const backendAudioBlob = new Blob([res.data], { type: "audio/mpeg" });
-      const url = URL.createObjectURL(backendAudioBlob);
+    if (audioContextRef.current) {
+      await audioContextRef.current.close();
+    }
 
-      setAudioUrl(url); // for <audio> tag
-      const audio = new Audio(url);
-      audio.play();
+    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
 
-      // Also keep in history for replay
-      setResponses((prev) => [...prev, url]);
-    });
+    // resume context (required on Chrome)
+    await audioContextRef.current.resume();
 
+    sourceRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
+    analyserRef.current = audioContextRef.current.createAnalyser();
+    analyserRef.current.fftSize = 256;
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    sourceRef.current.connect(analyserRef.current);
+    analyserRef.current.connect(audioContextRef.current.destination);
 
-    mediaRecorderRef.current.ondataavailable = (e) => {
-      if (e.data.size > 0) {
-        e.data.arrayBuffer().then((buf) => {
-          socketRef.current.emit("audio_chunk", buf);
-        });
-      }
-    };
-
-    mediaRecorderRef.current.start(2000); // send every 2s
-    setRecording(true);
+    drawBars();
   };
 
-  console.log(responses)
+  // 🎵 Draw WhatsApp-style bars based on audio output
+  const drawBars = () => {
+    if (!analyserRef.current) return;
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const bars = document.getElementsByClassName("bar");
+
+    const draw = () => {
+      animationRef.current = requestAnimationFrame(draw);
+      analyserRef.current.getByteFrequencyData(dataArray);
+
+      const step = Math.floor(dataArray.length / bars.length);
+
+      for (let i = 0; i < bars.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < step; j++) {
+          sum += dataArray[i * step + j];
+        }
+        const avg = sum / step;
+        const scale = isPlaying ? Math.max(0.2, avg / 50) : 0.2;
+
+        bars[i].style.transform = `scaleY(${scale})`;
+      }
+    };
+    draw();
+  };
+
+  // 🔊 Call Flask /tts route
+  const handleTTS = async (textParam) => {
+    const textToSpeak = textParam || ttsText;
+    if (!textToSpeak.trim()) return;
+
+    try {
+      const res = await axios.post(
+        "http://127.0.0.1:5000/tts",
+        { text: textToSpeak },
+        { responseType: "arraybuffer" }
+      );
+
+      const blob = new Blob([res.data], { type: "audio/mpeg" });
+      const url = URL.createObjectURL(blob);
+
+      setResponses([{ url, text: textToSpeak }]);
+
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.src = url;
+
+          // when audio starts playing, setup bars
+          audioRef.current.onplay = () => {
+            setupBars();
+            setIsPlaying(true);
+          };
+
+          audioRef.current.play();
+        }
+      }, 300);
+    } catch (err) {
+      console.error("TTS error:", err);
+    }
+  };
+
+  // 🎤 SpeechRecognition
+  const startStreaming = async () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = "en-US";
+
+      recognitionRef.current.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setTranscripts((prev) => [...prev, transcript]);
+        handleTTS(transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("SpeechRecognition Error:", event.error);
+      };
+
+      recognitionRef.current.onend = () => {
+        if (recording) {
+          console.log("⚠️ Restarting SpeechRecognition...");
+          setTimeout(() => recognitionRef.current.start(), 500);
+        }
+      };
+
+      recognitionRef.current.start();
+      setRecording(true);
+    }
+  };
+
+  const stopStreaming = () => {
+    if (recognitionRef.current) recognitionRef.current.stop();
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    if (audioContextRef.current) audioContextRef.current.close();
+    setRecording(false);
+    console.log("🛑 Streaming stopped");
+  };
+
+  // 🎵 Pause/Play toggle
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
   return (
     <div style={{ padding: "2rem" }}>
-      {!recording ? (
-        <button onClick={startStreaming}>Start Streaming</button>
-      ) : (
-        <p>🎤 Streaming...</p>
+      <div className="relative size-60 rounded-full overflow-hidden">
+        {/* Golden spinning disc background */}
+        <span className="absolute inset-0 flex items-center justify-center">
+          <span className="size-60 rounded-full animate-spin-slow bg-[conic-gradient(from_180deg_at_50%_50%,#ffd700,#fff8dc,#ffd700,#ffcc00,#ffd700)] shadow-[0_0_30px_rgba(255,215,0,0.6)]"></span>
+        </span>
+
+        {/* Centered clickable icon */}
+        <span className="relative z-10 flex items-center justify-center w-full h-full">
+          {!recording ? (
+            <button
+              onClick={startStreaming}
+              className="flex items-center justify-center size-10 rounded-full bg-black"
+            >
+              <PiWaveformBold className="text-white text-2xl" />
+            </button>
+          ) : (
+            <button
+              className="flex items-center justify-center size-10 rounded-full bg-black"
+              onClick={stopStreaming}
+            >
+              <FaPhoneSlash className="text-white text-2xl" />
+
+            </button>
+          )}
+        </span>
+      </div>
+
+      {/* Custom Audio Player */}
+      {responses.length > 0 && (
+        <div style={{ margin: "20px 0", textAlign: "center" }}>
+          <p>
+            <strong>Text:</strong> {responses[0].text}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: "6px",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "80px",
+              margin: "20px 0",
+            }}
+          >
+            {[...Array(7)].map((_, i) => (
+              <div
+                key={i}
+                className="bar"
+                style={{
+                  width: "6px",
+                  background: "#00cc66",
+                  height: "100%",
+                  transform: "scaleY(0.2)",
+                  transformOrigin: "center",
+                  borderRadius: "3px",
+                  transition: "transform 0.1s ease",
+                }}
+              ></div>
+            ))}
+          </div>
+          <button onClick={togglePlay} style={{ padding: "10px 20px" }}>
+            {isPlaying ? "⏸ Pause" : "▶️ Play"}
+          </button>
+          {/* hidden audio tag */}
+          <audio
+            ref={audioRef}
+            onEnded={() => setIsPlaying(false)}
+            style={{ display: "none" }}
+          />
+        </div>
       )}
 
-      <h3>AI Responses:</h3>
+      {/* Manual TTS */}
+      <div style={{ marginTop: "2rem" }}>
+        <h3>Manual Text to Speech:</h3>
+        <input
+          type="text"
+          value={ttsText}
+          onChange={(e) => setTtsText(e.target.value)}
+          placeholder="Enter text to speak..."
+          style={{ width: "300px" }}
+        />
+        <button onClick={() => handleTTS()} style={{ marginLeft: "10px" }}>
+          Speak
+        </button>
+      </div>
+
+      <h3>Live Transcripts:</h3>
       <ul>
-        {responses.map((url, i) => (
-          <li key={i} style={{ marginBottom: "1rem" }}>
-            <audio controls src={url}></audio>
-          </li>
+        {transcripts.map((t, i) => (
+          <li key={i}>{t}</li>
         ))}
       </ul>
     </div>
+
   );
 }
 
